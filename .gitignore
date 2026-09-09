@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Relatórios Word gerados (saída do agente)
+Resultado/
+
+# Arquivos txt
+arquivos_txt/
+
+# Cache dos PDFs baixados do DOU
+Agents/DOU_Research_Agent/downloads/
+
+# PDFs de fonte local (podem ser reobtidos na fonte oficial)
+Fonte/*.pdf
+
+# Streamlit
+.streamlit/secrets.toml
+
+# GitHub / deploy
+.github/
+
+# Configuração do opencode (ambiente local)
+.opencode/
+
+# IDE / SO
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
