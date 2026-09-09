@@ -35,3 +35,16 @@ Desktop.ini
 
 # Logs
 *.log
+
+# Segredos e credenciais (camada extra de proteção)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_ed25519
+id_rsa
+.credentials
+secrets.tmp
