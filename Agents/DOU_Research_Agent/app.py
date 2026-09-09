@@ -58,10 +58,10 @@ def descarregar_indices(sessao, secao: int, data: date):
 
 
 def main():
-    st.title("📰 DOU Research Agent")
+    st.title("📰 DOU Agente de Pesquisa")
     st.caption(
-        "Jornalista isento e técnico — pesquisa o Diário Oficial da União na fonte oficial "
-        "(pesquisa.in.gov.br), filtrando o Ministério da Justiça e Segurança Pública."
+        "Pesquisador isento e técnico — pesquisa o Diário Oficial da União na fonte oficial "
+        "(pesquisa.in.gov.br), filtrando o Ministério da Justiça e Segurança Pública por padrão."
     )
 
     with st.sidebar:
