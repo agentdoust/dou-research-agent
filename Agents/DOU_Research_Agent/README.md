@@ -23,8 +23,10 @@ O script executa o fluxo:
 
 ## 2. Mapa do código
 
-### Configuração (linhas 30–81)
-- `BASE_DIR`, `RESULT_DIR`, `CACHE_DIR` — diretórios raiz, de saída e de cache.
+### Configuração (linhas 30–60)
+- `AGENT_DIR`, `HOST_BASE`, `RAIZ_REPO` — caminhos portáveis derivados do script.
+- `_escolher_diretorio()` — resolve o 1º diretório gravável para `RESULT_DIR` e
+  `CACHE_DIR`; no Streamlit Cloud (filesystem somente leitura) cai para o tempdir.
 - `PESQUISA_URL`, `START_URL` — endpoints do portal (busca e aquecimento de sessão).
 - `SECOES` — cadastro das seções: DOU1 (Seção 1, jornal `515`) e DOU2 (Seção 2, jornal `529`).
 - `MINISTERIO_ALVO` — cabeçalho do ministério a ser filtrado.
@@ -34,7 +36,7 @@ O script executa o fluxo:
 - `ASSINADO_RE` — extrai o link de download da edição completa da página HTML.
 - `UA` — cabeçalho `User-Agent` de navegador (o portal bloqueia bots).
 
-### Rede e download (linhas 84–134)
+### Rede e download (linhas 113–170)
 - `criar_sessao()` — cria `requests.Session` e aquece a sessão acessando `start.action`
   (necessário para receber cookies; o portal retorna 403/500 sem sessão).
 - `obter_link_edicao(sessao, secao, data)` — busca a edição da data na seção via `GET`
@@ -45,20 +47,22 @@ O script executa o fluxo:
 - `ler_paginas(pdf_path)` / `extrair_texto(pdf_path)` — extraem o texto de todas as
   páginas com `pymupdf`, separando as páginas por `\n\f` (o segundo une as páginas).
 
-### Índices (Sumário) das seções (linhas 137–205)
+### Índices (Sumário) das seções (linhas 171–251)
 - `ler_indices(paginas)` — lê, na 1ª página do PDF, as entradas do sumário no formato
   `Nome do índice ... <página inicial>` e devolve a lista ordenada de `{nome, pagina}`.
+- `_inicios_paginas(paginas)` / `_linha_cabecalho_indice(...)` — auxiliares que ancoram
+  o cabeçalho de cada índice ao texto sem paginação.
 - `fatiar_indices(texto, paginas, nomes_selecionados)` — limita o texto aos blocos dos
   índices escolhidos: localiza a linha exata do cabeçalho de cada índice no conteúdo e
   corta do cabeçalho deste até o cabeçalho do índice seguinte (ou fim do documento).
 
-### Segmentação por órgão (linhas 208–229)
+### Segmentação por órgão (linhas 252–275)
 - `achar_bloco_mjsp(texto)` — localiza a primeira linha que é exatamente o cabeçalho
   do MJSP e retorna o intervalo (`inicio, fim`) até o cabeçalho do próximo ministério.
 - `limpar_linha(linha)` — heurística de ruído: vazio, número isolado (1–3 dígitos) ou
   `NOISE_RE` → `True` (linha a ignorar).
 
-### Seção 1 — atos normativos de segurança pública (linhas 156–210)
+### Seção 1 — atos normativos de segurança pública (linhas 276–332)
 - `extrair_atos_secao1(linhas)` — varre o bloco MJSP, agrupa cada ato (título +
   corpo até o próximo título) e mantém apenas os de segurança pública.
 - `SEGURANCA_TERMOS` — termos específicos que caracterizam o assunto
@@ -66,19 +70,19 @@ O script executa o fluxo:
 - `eh_ato_seguranca_publica(ato)` — filtro: o título+corpo contém algum termo da lista.
 - `resumir_corpo(corpo, max_len=900)` — resume o texto a partir de "resolve:".
 
-### Seção 2 — nomeações/exonerações da Polícia Federal (linhas 213–293)
+### Seção 2 — nomeações/exonerações da Polícia Federal (linhas 333–419)
 - `extrair_nomeacoes_secao2(linhas)` — dentro do bloco MJSP, isola o sub-bloco
   `POLÍCIA FEDERAL` (até o próximo órgão), divide em portarias (`DG/PF`, `DGP/PF`,
   `DDG/PF`) e extrai, de cada item de pessoal: número (`Nº`), verbo (Nomear /
   Designar / Exonerar / Dispensar), nome completo (caixa alta) e detalhes.
 - `_limpar_resto(texto)` — remove assinaturas e linhas residuais do trecho de detalhes.
 
-### Geração do documento Word (linhas 296–355)
+### Geração do documento Word (linhas 420–481)
 - `gerar_docx(data, resultados)` — monta o relatório com cabeçalho (fonte, data,
   filtro), a Seção 1 em lista numerada com bullets, e a Seção 2 em tabela
   5 colunas (Nº, Ato, Ação, Nome, Detalhes).
 
-### Fluxo principal (linhas 375–449)
+### Fluxo principal (linhas 482–551)
 - `processar_secao(sessao, secao, data, indices=None)` — orquestra uma seção: link →
   download → páginas → (opcional) fatia pelos índices selecionados → bloco MJSP →
   extração (devolve `{"secao1": [...]}` ou `{"secao2": [...]}`).
@@ -152,19 +156,49 @@ Fluxo na barra lateral:
 Opções adicionais: "Forçar novo download (ignorar cache)", que apaga o PDF da
 data antes de baixar novamente.
 
-## 6. Estrutura de arquivos
+## 6. Publicação no GitHub e deploy no Streamlit Community Cloud
+
+O código vive no repositório público `https://github.com/agentdoust/dou-research-agent`
+(branch `main`). A raiz do repositório contém `requirements.txt` (dependências do
+deploy) e o app fica em `Agents/DOU_Research_Agent/app.py`.
+
+### Deploy no Streamlit Community Cloud
+
+1. Acesse `https://share.streamlit.io/` e faça login com a conta GitHub
+   `agentdoust` (a autenticação é via OAuth do GitHub — mesma conta).
+2. **Novo app → Crie um app**: repositório `agentdoust/dou-research-agent`,
+   branch `main`, arquivo principal `Agents/DOU_Research_Agent/app.py`.
+3. Clique em **Deploy**. O cloud instala o `requirements.txt` da raiz e executa o
+   app.
+4. Resultado: `https://dou-research-agent.streamlit.app`.
+
+### Comportamento no cloud
+
+- O filesystem do contêiner é **somente leitura**; os diretórios de cache e de
+  resultados caem automaticamente para o tempdir (`_escolher_diretorio` em
+  `agent.py:42`), então cada sessão baixa os PDFs sob demanda.
+- Segredos (se um dia forem necessários) vão em **Settings → Secrets** do app
+  (guardiões em `.streamlit/secrets.toml`, ignorado pelo Git).
+
+## 7. Estrutura de arquivos
 
 ```text
-D:\opencode_desktop\
+D:\opencode_desktop\          (raiz do repositório GitHub)
+├─ .gitignore                 # exclui downloads, resultado, arquivos_txt, etc.
+├─ requirements.txt           # dependências do deploy (Streamlit Cloud)
+├─ .streamlit\config.toml     # tema/apresentação do app (opcional)
+├─ arquivos_txt\              # notas e credenciais — NÃO versionado
+│  └─ CRDS                    # credenciais GitHub/Streamlit (gitignored)
 ├─ Agents\DOU_Research_Agent\
-│  ├─ agent.py            # lógica do agente (linha de comando)
-│  ├─ app.py              # interface Streamlit
-│  ├─ downloads\          # cache dos PDFs (<YYYY_MM_DD>\<arquivo>.pdf)
-├─ Fonte\                 # PDFs de edições fornecidas manualmente (consulta)
-└─ resultado\             # relatórios Word gerados
+│  ├─ agent.py                # lógica do agente (linha de comando)
+│  ├─ app.py                  # interface Streamlit
+│  ├─ README.md
+│  └─ downloads\              # cache dos PDFs (<YYYY_MM_DD>\<arquivo>.pdf) — ignorado
+├─ Fonte\                     # PDFs de edições fornecidas manualmente (consulta) — ignorado
+└─ resultado\                 # relatórios Word gerados — ignorado
 ```
 
-## 7. Observações técnicas
+## 8. Observações técnicas
 
 - **Sessão obrigatória**: o portal exige cookies; por isso `criar_sessao()` chama
   `start.action` antes da busca. `POST` em `jornalList.action` é bloqueado (403);
@@ -174,8 +208,11 @@ D:\opencode_desktop\
 - **Acentos/console**: no Windows/PowerShell o console pode exibir acentos
   corrompidos (cp1252), mas os arquivos e o Word preservam UTF-8.
 - **Dependências**: `pip install requests pymupdf python-docx streamlit` (Python 3.13+).
+  Para o deploy, `requirements.txt` na raiz do repositório.
+- **Diretórios no cloud**: `resultado/` e `downloads/` só são graváveis em máquina
+  local; no Streamlit Cloud o agente os remapeia para o tempdir automaticamente.
 
-## 8. Limitações conhecidas
+## 9. Limitações conhecidas
 
 - A segmentação assume o cabeçalho do MJSP exatamente na forma
   `Ministério da Justiça e Segurança Pública`; variações do nome podem não casar.

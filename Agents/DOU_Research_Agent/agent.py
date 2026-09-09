@@ -11,12 +11,13 @@ Tarefa:
   - Seção 2 (DOU2): nomeações e exonerações relacionadas à Polícia Federal,
     restritas ao Ministério da Justiça e Segurança Pública.
 
-Saída: documento Word gerado na pasta D:\\opencode_desktop\\resultado
+Saída: documento Word gerado na pasta Resultado (no local usa D:\\opencode_desktop\\resultado).
 """
 
 import argparse
 import re
 import sys
+import tempfile
 from datetime import date, datetime
 from pathlib import Path
 
@@ -31,14 +32,31 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 # Configuração
 # ---------------------------------------------------------------------------
 # Caminhos portáveis: em máquina local usa-se D:\opencode_desktop; no deploy
-# (Streamlit Cloud/Linux) os diretórios são derivados do próprio script.
+# (Streamlit Cloud/Linux) o filesystem é somente leitura exceto /tmp, então os
+# diretórios de download e de resultados caem para o tempdir do usuário.
 AGENT_DIR = Path(__file__).resolve().parent
 HOST_BASE = Path(r"D:\opencode_desktop")
 RAIZ_REPO = AGENT_DIR.parent.parent if AGENT_DIR.parent.name == "Agents" else AGENT_DIR.parent
 
-BASE_DIR = HOST_BASE if HOST_BASE.exists() else RAIZ_REPO
-RESULT_DIR = BASE_DIR / "resultado"
-CACHE_DIR = AGENT_DIR / "downloads"
+
+def _escolher_diretorio(nome, *candidatos):
+    """Retorna o primeiro diretório gravável entre os candidatos; senão usa tempdir."""
+    for base in candidatos:
+        try:
+            d = base / nome
+            d.mkdir(parents=True, exist_ok=True)
+            (d / ".gravavel").write_text("ok")
+            (d / ".gravavel").unlink()
+            return d
+        except OSError:
+            continue
+    d = Path(tempfile.gettempdir()) / "dou_agent" / nome
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+RESULT_DIR = _escolher_diretorio("resultado", HOST_BASE, RAIZ_REPO)
+CACHE_DIR = _escolher_diretorio("downloads", AGENT_DIR, RAIZ_REPO)
 
 PESQUISA_URL = "https://pesquisa.in.gov.br/imprensa/core/jornalList.action"
 START_URL = "https://pesquisa.in.gov.br/imprensa/core/start.action"
