@@ -25,7 +25,7 @@ sys.path.insert(0, str(AGENT_DIR))
 import agent as ag  # noqa: E402
 
 st.set_page_config(
-    page_title="DOU Agente de pesquisa",
+    page_title="DOU Agente de Pesquisa",
     page_icon="📰",
     layout="wide",
 )
