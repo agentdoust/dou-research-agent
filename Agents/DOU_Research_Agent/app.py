@@ -68,10 +68,9 @@ def main():
         st.header("Parâmetros")
         hoje = date.today()
         data = st.date_input(
-            "Data da edição",
+            "Data da edição (qualquer data)",
             value=hoje,
             min_value=MIN_DATA,
-            max_value=hoje,
         )
         forcar = st.toggle("Forçar novo download (ignorar cache)", value=False)
         carregar = st.button(
@@ -102,6 +101,11 @@ def main():
                 with status:
                     st.text(f"Seção 1: {len(inds[1])} índices")
                     st.text(f"Seção 2: {len(inds[2])} índices")
+                    if not inds[1] and not inds[2]:
+                        st.text(
+                            "Edição não encontrada para esta data "
+                            "(pode não ter sido publicada ou ser fim de semana/feriado)."
+                        )
                 st.session_state["indices"] = inds
                 st.session_state["indices_data"] = data
 
