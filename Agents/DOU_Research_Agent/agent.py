@@ -372,6 +372,7 @@ def extrair_nomeacoes_secao2(linhas):
         itens = list(re.finditer(
             r"(?!\s)(?:N[º°]\s*\d+[A-Z]?\s+)?(?:Nomear|Designar|Exonerar|Dispensar)\b",
             juntado,
+            flags=re.IGNORECASE,
         ))
         spans = [it.start() for it in itens]
         segs = [juntado[s:e].strip() for s, e in zip(
@@ -383,6 +384,7 @@ def extrair_nomeacoes_secao2(linhas):
             mverbo = re.match(
                 r"(?P<verbo>Nomear|Designar|Exonerar|Dispensar)\b",
                 seg[fim_num:],
+                flags=re.IGNORECASE,
             )
             if not mverbo:
                 continue
@@ -447,7 +449,11 @@ def gerar_docx(data, resultados):
         doc.add_paragraph("Nenhum ato normativo de segurança pública identificado no MJSP.")
 
     # Seção 2
-    doc.add_heading("Seção 2 — Nomeações e exonerações — Polícia Federal (MJSP)", level=1)
+    doc.add_heading(
+        "Seção 2 — Pessoal da Polícia Federal (MJSP): nomeações, exonerações, "
+        "designações e dispensas",
+        level=1,
+    )
     s2 = resultados.get("secao2", [])
     doc.add_paragraph(f"Total de ocorrências identificadas: {len(s2)}")
     if s2:
@@ -470,7 +476,10 @@ def gerar_docx(data, resultados):
             for row in tabela.rows:
                 row.cells[w].width = width
     else:
-        doc.add_paragraph("Nenhuma nomeação/exoneração da Polícia Federal identificada no MJSP.")
+        doc.add_paragraph(
+            "Nenhuma ocorrência de pessoal da Polícia Federal identificada no MJSP "
+            "(nomeações, exonerações, designações e dispensas)."
+        )
 
     doc.save(str(caminho))
     return caminho
@@ -512,7 +521,7 @@ def processar_secao(sessao, secao: int, data: date, indices=None) -> dict:
         return {"secao1": atos}
     else:
         nomes = extrair_nomeacoes_secao2(linhas)
-        print(f"  [ok] {len(nomes)} nomeações/exonerações PF localizadas")
+        print(f"  [ok] {len(nomes)} ocorrências de pessoal PF localizadas (nomeações, exonerações, designações e dispensas)")
         return {"secao2": nomes}
 
 

@@ -225,7 +225,7 @@ def main():
     tab1, tab2 = st.tabs(
         [
             f"Seção 1 — Atos normativos ({len(s1)})",
-            f"Seção 2 — Nomeações/exonerações PF ({len(s2)})",
+            f"Seção 2 — PF: nomeações, exonerações, designações e dispensas ({len(s2)})",
         ]
     )
 
@@ -240,7 +240,10 @@ def main():
 
     with tab2:
         if not s2:
-            st.info("Nenhuma nomeação/exoneração da Polícia Federal identificada.")
+            st.info(
+                "Nenhuma ocorrência de pessoal da Polícia Federal identificada "
+                "(nomeações, exonerações, designações e dispensas)."
+            )
         else:
             df = pd.DataFrame([
                 {

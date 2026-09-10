@@ -70,19 +70,20 @@ O script executa o fluxo:
 - `eh_ato_seguranca_publica(ato)` — filtro: o título+corpo contém algum termo da lista.
 - `resumir_corpo(corpo, max_len=900)` — resume o texto a partir de "resolve:".
 
-### Seção 2 — nomeações/exonerações da Polícia Federal (linhas 333–419)
+### Seção 2 — pessoal da Polícia Federal: nomeações, exonerações, designações e dispensas (linhas 333–421)
 - `extrair_nomeacoes_secao2(linhas)` — dentro do bloco MJSP, isola o sub-bloco
   `POLÍCIA FEDERAL` (até o próximo órgão), divide em portarias (`DG/PF`, `DGP/PF`,
-  `DDG/PF`) e extrai, de cada item de pessoal: número (`Nº`), verbo (Nomear /
-  Designar / Exonerar / Dispensar), nome completo (caixa alta) e detalhes.
+  `DDG/PF`) e extrai, de cada item de pessoal: número (`Nº`), ação (Nomear /
+  Designar / Exonerar / Dispensar — captura insensível a maiúsculas/minúsculas),
+  nome completo (caixa alta) e detalhes.
 - `_limpar_resto(texto)` — remove assinaturas e linhas residuais do trecho de detalhes.
 
-### Geração do documento Word (linhas 420–481)
+### Geração do documento Word (linhas 422–489)
 - `gerar_docx(data, resultados)` — monta o relatório com cabeçalho (fonte, data,
   filtro), a Seção 1 em lista numerada com bullets, e a Seção 2 em tabela
   5 colunas (Nº, Ato, Ação, Nome, Detalhes).
 
-### Fluxo principal (linhas 482–551)
+### Fluxo principal (linhas 491–569)
 - `processar_secao(sessao, secao, data, indices=None)` — orquestra uma seção: link →
   download → páginas → (opcional) fatia pelos índices selecionados → bloco MJSP →
   extração (devolve `{"secao1": [...]}` ou `{"secao2": [...]}`).
