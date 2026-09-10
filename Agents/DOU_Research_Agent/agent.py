@@ -197,13 +197,19 @@ def _inicios_paginas(paginas):
 
 
 def _linha_cabecalho_indice(linhas, inicios, indice, pagina_pdf):
-    """Linha do cabeçalho exato do índice no conteúdo (após a página do sumário)."""
-    inicio = inicios[pagina_pdf]
+    """Linha do cabeçalho exato do índice no conteúdo (após a página do sumário).
+
+    O número de página do sumário pode divergir ±1 da página física do PDF;
+    a varredura começa na página anterior à indicada e cobre até 2 páginas
+    adiante, tolerando a diferença sem varrer o documento inteiro.
+    """
+    ini = inicios[max(0, pagina_pdf - 1)]
+    fim = inicios[min(pagina_pdf + 2, len(inicios) - 1)]
     alvo = indice["nome"].casefold()
-    for i in range(inicio, len(linhas)):
+    for i in range(ini, min(fim, len(linhas))):
         if linhas[i].strip().casefold() == alvo:
             return i
-    return inicio
+    return ini
 
 
 def fatiar_indices(texto: str, paginas, nomes_selecionados):

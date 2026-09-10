@@ -51,7 +51,8 @@ O script executa o fluxo:
 - `ler_indices(paginas)` — lê, na 1ª página do PDF, as entradas do sumário no formato
   `Nome do índice ... <página inicial>` e devolve a lista ordenada de `{nome, pagina}`.
 - `_inicios_paginas(paginas)` / `_linha_cabecalho_indice(...)` — auxiliares que ancoram
-  o cabeçalho de cada índice ao texto sem paginação.
+  o cabeçalho de cada índice ao texto sem paginação; a busca tolera uma divergência de
+  ±1 página entre o número do sumário e a página física do PDF.
 - `fatiar_indices(texto, paginas, nomes_selecionados)` — limita o texto aos blocos dos
   índices escolhidos: localiza a linha exata do cabeçalho de cada índice no conteúdo e
   corta do cabeçalho deste até o cabeçalho do índice seguinte (ou fim do documento).
